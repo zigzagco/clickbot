@@ -1,7 +1,7 @@
 const puppeteer = require('puppeteer-extra')
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
-const creds = require('/Users/gleb/WebstormProjects/clickbot/proxybot-374920-634195a0e3b1.json');
+const creds = require('./proxybot-374920-634195a0e3b1.json');
 const fetch = require("node-fetch");
 const https = require('https'); // or 'https' for https:// URLs
 const fs = require('fs');
