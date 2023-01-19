@@ -9,14 +9,19 @@ puppeteer.use(StealthPlugin())
 const paths = './extentions/eppiocemhmnlbhjplcgkofciiegomcon/2.5.10_0';
 const paths2 = './extentions/majdfhpaihoncoakbjgbdhglocklcgno/2.6.0_0';
 const paths3 = './extentions/lpejglcfpkpbjhmnnmpmmlpblkcmdgmi/1.9.3_0';
+const paths4 = './extentions/bihmplhobchoageeokmgbdihknkjbknd/4.1.0_0';
         try {
             (async () => {
-                for (let i=0;i<500;i++){
-                    await randomInteger(1, 2)
-                    if (await randomInteger(1, 2)===1){
+                for (let i=0;i<100;i++){
+                    let randint = await randomInteger(1, 3)
+                    if (randint===1){
                         await startBrowserPath1()
                     }else {
-                        await startBrowserPath2()
+                        if (randint===2){
+                            await startBrowserPath2()
+                        }else {
+                            await startBrowserPath3()
+                        }
                     }
                     console.log('ok '+i)
                 }
@@ -29,6 +34,7 @@ async function startBrowserPath1(){
     const browser = await puppeteer.launch({
         headless:false,
         executablePath: executablePath(),
+        ignoreHTTPSErrors: true,
         args: [
             '--no-sandbox',
             `--load-extension=${paths2}`
@@ -78,10 +84,12 @@ async function startBrowserPath1(){
         await clickSelector(mainPage,'#mainBtn > button')
         await mainPage.waitForTimeout(10000)
         await mainPage.goto('https://api.ipify.org')
+        await mainPage.waitForTimeout(10000)
         const ipchek=await mainPage.evaluate(() => {
             return document.querySelector('body > pre').innerText
         }).catch(e => console.dir(e));
         console.log(ipchek)
+        await gotoLademiLink(mainPage)
         await setData(ipchek,randomint)
         await mainPage.close()
         await browser.close()
@@ -95,6 +103,7 @@ async function startBrowserPath2(){
     const browser = await puppeteer.launch({
         headless:false,
         executablePath: executablePath(),
+        ignoreHTTPSErrors: true,
         args: [
             '--no-sandbox',
             `--load-extension=${paths3}`
@@ -119,22 +128,108 @@ async function startBrowserPath2(){
             await browser.close()
         }else {
             await mainPage.goto('https://api.ipify.org')
+            await mainPage.waitForTimeout(5000)
             const ipchek=await mainPage.evaluate(() => {
                 return document.querySelector('body > pre').innerText
             }).catch(e => console.dir(e));
             console.log(ipchek)
+            await gotoLademiLink(mainPage)
             await setData(ipchek,'Undefined')
+            await mainPage.close()
+            await browser.close()
         }
-        await mainPage.close()
-        await browser.close()
     }catch (e){
         console.log(e)
         await browser.close()
     }
 }
+async function startBrowserPath3(){
+    const browser = await puppeteer.launch({
+        headless:false,
+        executablePath: executablePath(),
+        ignoreHTTPSErrors: true,
+        args: [
+            '--no-sandbox',
+            `--load-extension=${paths4}`
+        ]
+    })
+    const [mainPage] = await browser.pages();
+    try {
+        console.log('script started')
+        await mainPage.waitForTimeout(5000)
+        await mainPage.goto('chrome-extension://bihmplhobchoageeokmgbdihknkjbknd/panel/index.html',);
+        await mainPage.waitForTimeout(10000)
+        await mainPage.reload()
+        await clickSelector(mainPage,'#Main > div.disconnectedDescription > div > span')
+        const randomint=await randomInteger(0,5)
+        switch (randomint){
+            case 0:{
+                await anotherclickSelector(mainPage,'#Locations > div.list > div:nth-child(8)')
+                break;
+            }
+            case 1:{
+                await anotherclickSelector(mainPage,'#Locations > div.list > div:nth-child(7)')
+                break;
+            }
+            case 2:{
+                await anotherclickSelector(mainPage,'#Locations > div.list > div:nth-child(5)')
+                break;
+            }
+            case 3:{
+                await anotherclickSelector(mainPage,'#Locations > div.list > div:nth-child(6)')
+                break;
+            }
+            case 4:{
+                await anotherclickSelector(mainPage,'#Locations > div.list > div:nth-child(4)')
+                break;
+            }
+            case 5:{
+                await anotherclickSelector(mainPage,'#Locations > div.list > div:nth-child(3)')
+                break;
+            }
+        }
+        await mainPage.waitForTimeout(5000)
+        await clickSelector(mainPage,'#ConnectionButton')
+        await mainPage.waitForTimeout(10000)
+        await mainPage.goto('https://api.ipify.org')
+        await mainPage.waitForTimeout(5000)
+        const ipchek=await mainPage.evaluate(() => {
+            return document.querySelector('body > pre').innerText
+        }).catch(e => console.dir(e));
+        console.log(ipchek)
+        await gotoLademiLink(mainPage)
+        await setData(ipchek,'Undefined')
+        await mainPage.close()
+        await browser.close()
+    }catch (e){
+        console.log(e)
+        await mainPage.close()
+        await browser.close()
+    }
+}
+
+
+
 async function clickSelector(page,selector) {
     await page.waitForSelector(selector)
     await page.click(selector)
+}
+async function anotherclickSelector(page,selector) {
+    const handle = await page.waitForSelector(selector)
+    handle.evaluate((h)=>{h.click()})
+}
+
+async function gotoLademiLink(page) {
+            try {
+                await page.goto('https://www.lademi.by/')
+                await page.waitForTimeout(60000*2)
+                await page.goto('https://www.lademi.ru/')
+                await page.waitForTimeout(60000*2)
+            }catch (e){
+                console.log(e)
+                page.screenshot('error')
+            }
+
 }
 async function randomInteger(min, max) {
     // получить случайное число от (min-0.5) до (max+0.5)
