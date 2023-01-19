@@ -12,7 +12,7 @@ const paths2 = '/Users/gleb/WebstormProjects/clickbot/extentions/majdfhpaihoncoa
         try {
             (async () => {
                 for (let i=0;i<5;i++){
-                    //await startBrowser()
+                    await startBrowser()
                     console.log('ok '+i)
                 }
             })();
@@ -54,7 +54,7 @@ async function clickInput(page,selector,text) {
 }*/
 async function startBrowser(){
     const browser = await puppeteer.launch({
-        headless: true,
+        headless: false,
         executablePath: executablePath(),
         args: [
             '--no-sandbox',
