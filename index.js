@@ -54,7 +54,7 @@ async function clickInput(page,selector,text) {
 }*/
 async function startBrowser(){
     const browser = await puppeteer.launch({
-        headless: false,
+        headless:false,
         executablePath: executablePath(),
         args: [
             '--no-sandbox',
@@ -63,15 +63,18 @@ async function startBrowser(){
     })
     const [mainPage] = await browser.pages();
     try {
+        console.log('script started')
         //await page.goto('https://api.ipify.org/')
         //await page.screenshot({path: 'msedge-extension.png'});
         //await page.goto('chrome-extension://eppiocemhmnlbhjplcgkofciiegomcon/popup/index.html#/main');
         await mainPage.waitForTimeout(5000)
         await mainPage.goto('chrome-extension://majdfhpaihoncoakbjgbdhglocklcgno/html/foreground.html',);
+        await mainPage.waitForTimeout(5000)
         await mainPage.reload()
         await clickSelector(mainPage,'#screen-tooltips-template > div.navigation > div > div:nth-child(3) > div > div > button')
         await clickSelector(mainPage,'#screen-tooltips-template > div.navigation > div > div:nth-child(3) > div > div > button')
         await mainPage.waitForTimeout(3000)
+        await mainPage.reload()
         await clickSelector(mainPage,'#content > div.current-region > div > div.current-region-upper-block')
         switch ('ru'){
             case 'fr':{
