@@ -7,8 +7,8 @@ const https = require('https'); // or 'https' for https:// URLs
 const fs = require('fs');
 const { executablePath } = require('puppeteer');
 puppeteer.use(StealthPlugin())
-const paths = '/Users/gleb/WebstormProjects/clickbot/extentions/eppiocemhmnlbhjplcgkofciiegomcon/2.5.10_0';
-const paths2 = '/Users/gleb/WebstormProjects/clickbot/extentions/majdfhpaihoncoakbjgbdhglocklcgno/2.6.0_0';
+const paths = './extentions/eppiocemhmnlbhjplcgkofciiegomcon/2.5.10_0';
+const paths2 = './extentions/majdfhpaihoncoakbjgbdhglocklcgno/2.6.0_0';
         try {
             (async () => {
                 for (let i=0;i<5;i++){
