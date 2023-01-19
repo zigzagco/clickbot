@@ -11,8 +11,13 @@ const paths2 = './extentions/majdfhpaihoncoakbjgbdhglocklcgno/2.6.0_0';
 const paths3 = './extentions/lpejglcfpkpbjhmnnmpmmlpblkcmdgmi/1.9.3_0';
         try {
             (async () => {
-                for (let i=0;i<10;i++){
-                    await startBrowserPath2()
+                for (let i=0;i<500;i++){
+                    await randomInteger(1, 2)
+                    if (await randomInteger(1, 2)===1){
+                        await startBrowserPath1()
+                    }else {
+                        await startBrowserPath2()
+                    }
                     console.log('ok '+i)
                 }
             })();
