@@ -12,7 +12,8 @@ const paths2 = '/Users/gleb/WebstormProjects/clickbot/extentions/majdfhpaihoncoa
         try {
             (async () => {
                 for (let i=0;i<5;i++){
-                    await startBrowser()
+                    //await startBrowser()
+                    console.log('ok '+i)
                 }
             })();
         }catch (e){
