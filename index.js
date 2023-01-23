@@ -2,6 +2,7 @@ const puppeteer = require('puppeteer-extra')
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 const creds = require('./proxybot-374920-634195a0e3b1.json');
+const randomUseragent = require('random-useragent');
 const https = require('https'); // or 'https' for https:// URLs
 const fs = require('fs');
 const { executablePath } = require('puppeteer');
@@ -23,6 +24,7 @@ const paths4 = './extentions/bihmplhobchoageeokmgbdihknkjbknd/4.1.0_0';
                             await startBrowserPath3()
                         }
                     }
+                    //await mainPage.setUserAgent('Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1')
                     console.log('ok '+i)
                 }
             })();
@@ -41,6 +43,7 @@ async function startBrowserPath1(){
         ]
     })
     const [mainPage] = await browser.pages();
+    //await mainPage.setUserAgent('Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1')
     try {
         console.log('script started')
         await mainPage.waitForTimeout(5000)
@@ -110,6 +113,7 @@ async function startBrowserPath2(){
         ]
     })
     const [mainPage] = await browser.pages();
+    //await mainPage.setUserAgent('Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1')
     try {
         console.log('script started')
         await mainPage.waitForTimeout(5000)
@@ -154,6 +158,7 @@ async function startBrowserPath3(){
         ]
     })
     const [mainPage] = await browser.pages();
+   // await mainPage.setUserAgent('Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1')
     try {
         console.log('script started')
         await mainPage.waitForTimeout(5000)
@@ -221,10 +226,61 @@ async function anotherclickSelector(page,selector) {
 
 async function gotoLademiLink(page) {
             try {
-                await page.goto('https://www.lademi.by/')
+                let useragent= randomUseragent.getRandom();
+                /*await page.goto('https://www.lademi.by/')
                 await page.waitForTimeout(60000*2)
                 await page.goto('https://www.lademi.ru/')
-                await page.waitForTimeout(60000*2)
+                await page.waitForTimeout(60000*2)*/
+                await page.goto('https://www.google.com/',{waitUntil:'domcontentloaded'})
+                //#L2AGLb
+                const myLocalValue = 'lademi by';
+                try {
+                    await page.waitForSelector('#L2AGLb')
+                    await page.click('#L2AGLb')
+                    await page.waitForTimeout(5000)
+                    await page.click('input[type="text"]')
+                    await page.keyboard.type(myLocalValue);
+                    //await page.$eval('input[type="text"]', (el, value) => el.value = value, myLocalValue);
+                    await page.keyboard.press('Enter');
+                    await page.waitForTimeout(10000)
+                    const linkHandlers = await page.$x("//cite[contains(text(), 'https://www.lademi.by')]");
+                    if (linkHandlers.length > 0) {
+                        await page.setUserAgent(useragent)
+                        await linkHandlers[0].click();
+                        console.log('click')
+                        await page.waitForTimeout(10000)
+                    } else {
+                        throw new Error("Link not found");
+                    }
+                }catch (e) {
+                    await page.$eval('input[type="text"]', (el, value) => el.value = value, myLocalValue);
+                    await page.keyboard.press('Enter');
+                    await page.waitForTimeout(10000)
+                    const linkHandlers = await page.$x("//cite[contains(text(), 'https://www.lademi.by')]");
+                    if (linkHandlers.length > 0) {
+                        await page.setUserAgent(useragent)
+                        await linkHandlers[0].click();
+                        console.log('click')
+                        await page.waitForTimeout(10000)
+                    } else {
+                        throw new Error("Link not found");
+                    }
+                }
+
+                //await page.waitForSelector(".LC20lb", {visible: true});
+                //document.querySelectorAll('cite')
+                /*const searchResults = await page.$$eval("cite", els =>
+                    els.map(e => e.innerText)
+                );*/
+                /*for (let i=0;i<10;i++){
+                    if (searchResults[i]==='https://www.lademi.by') {
+                        console.log('good')
+                    }
+                    }else {
+                        console.log('bad')
+                    }
+                }*/
+                //console.log();
             }catch (e){
                 console.log(e)
                 page.screenshot('error')
@@ -281,18 +337,4 @@ function get_day(){
         case 11: fMonth="декабря"; break;
     }
     return (Day + " " + fMonth + " " + Year)
-}
-function txtDownloader(link) {
-    try {
-        const file = fs.createWriteStream("proxy.txt");
-        const request = https.get(link, function(response) {
-            response.pipe(file);
-            file.on("finish", () => {
-                file.close();
-                console.log("Download Completed");
-            });
-        });
-    }catch (e){
-        console.log('error download proxies')
-    }
 }
