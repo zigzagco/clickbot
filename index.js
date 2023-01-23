@@ -248,7 +248,7 @@ async function gotoLademiLink(page) {
                         await page.setUserAgent(useragent)
                         await linkHandlers[0].click();
                         console.log('click')
-                        await page.waitForTimeout(10000)
+                        await page.waitForTimeout(240000)
                     } else {
                         throw new Error("Link not found");
                     }
@@ -261,7 +261,7 @@ async function gotoLademiLink(page) {
                         await page.setUserAgent(useragent)
                         await linkHandlers[0].click();
                         console.log('click')
-                        await page.waitForTimeout(10000)
+                        await page.waitForTimeout(240000)
                     } else {
                         throw new Error("Link not found");
                     }
