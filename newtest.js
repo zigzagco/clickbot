@@ -4,9 +4,8 @@ const {executablePath} = require("puppeteer");
 const bot = new TelegramBot('6080703350:AAFCOWrdz6X7MXZucdCjZ8pHvKWhosXPcw8', { polling: true });
 const Excel = require('exceljs')
 const fs = require("fs");
+const cron = require("node-cron");
 const randomUseragent = require("random-useragent");
-const {GoogleSpreadsheet} = require("google-spreadsheet");
-const creds = require("./proxybot-374920-634195a0e3b1.json");
 const StealthPlugin = require("puppeteer-extra-plugin-stealth");
 puppeteer.use(StealthPlugin())
 
@@ -30,35 +29,35 @@ const task = (msg,text,docName,startTime,endTime,callback) => {
             }
         });
         await sleep(5000)
-
         const currentTimeStart = new Date().getHours()
-        const progresmsg = await bot.sendMessage(msg.chat.id, 'Выполнено 0/'+text.key4)
-        console.log(progresmsg.message_id)
+        const gg=await bot.sendMessage(msg.chat.id,'wait')
         await sleep(5000)
         let stopped = false
         while (!stopped){
             const ivalue=await getivalue(docName)
-            if (ivalue[0]+1 >= ivalue[1]){
+            if (ivalue[0]+1 > ivalue[1]){
                 stopped=true
             }else{
-                let chid=msg.chat.id
-                let essage_id=progresmsg.message_id
-                await bot.editMessageText('Выполнено ' + ivalue[0],{chat_id:chid,message_id:essage_id})
+                //console.log(gg)
+                await bot.editMessageText(new Date()+'\n'+'Выпонено: '+ivalue[0]+' из '+ivalue[1], {
+                    chat_id: msg.chat.id,
+                    message_id: gg.message_id
+                });
             }
             ////////
             try {
                 let randint = await randomInteger(1, 3)
-                    if (randint === 1) {
-                        await startBrowserPath1(docName,text)
+                if (randint === 1) {
+                    await startBrowserPath1(docName,text)
+                } else {
+                    if (randint === 2) {
+                        await startBrowserPath2(docName,text)
                     } else {
-                        if (randint === 2) {
-                            await startBrowserPath2(docName,text)
-                        } else {
-                            await startBrowserPath3(docName,text)
-                        }
+                        await startBrowserPath3(docName,text)
                     }
-                        //await mainPage.setUserAgent('Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1')
-                        console.log('ok ' + i)
+                }
+                //await mainPage.setUserAgent('Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1')
+                console.log('ok ' + i)
             }catch (e){
                 console.log('vpn strted')
             }
@@ -104,15 +103,50 @@ bot.onText(/\/add_task (.+)/, (msg, match) => {
         const arrayTime = jsonString.key3.split("-");
         let docName=`exel/report_${msg.from.username}_${msg.message_id}.xlsx`
         console.log(docName)
-        bot.sendMessage(chatId,'рассчетное время выполнения:'+(parseInt(jsonString.key4)*6)+' минут')
+        bot.sendMessage(chatId,'рассчетное время выполнения: '+(parseInt(jsonString.key4)*jsonString.key5)+' минут')
         runTask(msg,jsonString,docName,parseInt(arrayTime[0]), parseInt(arrayTime[1]));
     }else {
         console.log('incoect string')
     }
     //bot.sendMessage(chatId, `Выполнение запущено: `);
 });
+bot.onText(/\/add_task_dayly (.+)/, (msg, match) => {
+    const chatId = msg.chat.id;
+    const str = match[1];
+    let jsonString=strToJson(str,msg)
+    if (jsonString!=null){
+        const arrayTime = jsonString.key3.split("-");
+        let docName=`exel/report_${msg.from.username}_${msg.message_id}.xlsx`
+        console.log(docName)
+        bot.sendMessage(chatId,'Рассчетное время выполнения:'+(parseInt(jsonString.key4)*jsonString.key5)+' минут')
+        const currentTime = new Date().getHours();
+        let cronExpr="0 "+arrayTime[0]+" * * *"
+        console.log(cronExpr)
+        cron.schedule(cronExpr, function() {
+            console.log("Running task every day at "+arrayTime[0]);
+            runTask(msg,jsonString,docName,parseInt(arrayTime[0]),parseInt(arrayTime[1]))
+        });
+        //setTimeout(function(){runTask(msg,jsonString,docName,parseInt(arrayTime[0]), parseInt(arrayTime[1]))}, 60 * 1000);
+    }else {
+        console.log('incoect string')
+    }
+    //bot.sendMessage(chatId, `Выполнение запущено: `);
+});
+bot.onText(/\/help/, (msg) => {
+    bot.sendMessage(msg.chat.id, 'Доступные команды:\n' +
+        ' /help - помощь\n' +
+        ' /add_task_dayly - запускает команду каждый день\n' +
+        ' /add_task - запускает скрипт, введите данные в таком формате: \nkey1:ключевое слово,key2:домен пример:(https://домен.зона),key3:ввременной промежуток(12-17),key4:количество переходов(1000),key5:время присутствия на одоной странице\n' +
+        ' /time - получить текущее время\n');
+});
+bot.onText(/\/time/, (msg) => {
+    const now = new Date();
+    bot.sendMessage(msg.chat.id, 'The current time is ' + now.toLocaleTimeString());
+});
 
 
+
+////////////////////////////    tg bot   /////////////////////////////
 
 async function initsheet(docName,text){
     let workbook = new Excel.Workbook()
@@ -170,7 +204,7 @@ async function addrowsheet(docName,ip,time,date,country){
 
 function strToJson(textString,task){
     const array = textString.split(",");
-    const expectedKeys = ["key1", "key2", "key3", "key4"];
+    const expectedKeys = ["key1", "key2", "key3", "key4","key5"];
     const timeIntervalRegex = /^\d{1,2}-\d{1,2}$/;
     const numberRegex = /^\d+$/;
 
@@ -183,8 +217,8 @@ function strToJson(textString,task){
     }
 
     //console.log(jsonObject);
-
-    if (count === 4) {
+    console.log(count)
+    if (count === 5) {
         let keysAreCorrect = true;
         for (const key in jsonObject) {
             if (!expectedKeys.includes(key)) {
@@ -213,24 +247,24 @@ function strToJson(textString,task){
             return null;
         }
     } else {
-        console.error('Error: The number of keys is not 4.');
-        bot.sendMessage(task.chat.id, 'пораметров должно быть 4');
+        console.error('Error: The number of keys is not 5.');
+        bot.sendMessage(task.chat.id, 'параметров должно быть 5');
         return null;
     }
 }
 async function start_browser(){
-        const browser = await puppeteer.launch({
-            headless:false,
-            executablePath: executablePath(),
-            ignoreHTTPSErrors: true,
-            args: [
-                '--no-sandbox',
-            ]
-        })
-        const [mainPage] = await browser.pages();
-        await mainPage.waitForTimeout(5000)
-        await mainPage.close()
-        await browser.close()
+    const browser = await puppeteer.launch({
+        headless:false,
+        executablePath: executablePath(),
+        ignoreHTTPSErrors: true,
+        args: [
+            '--no-sandbox',
+        ]
+    })
+    const [mainPage] = await browser.pages();
+    await mainPage.waitForTimeout(5000)
+    await mainPage.close()
+    await browser.close()
 }
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -248,6 +282,7 @@ async function startBrowserPath1(docName,text){
         ]
     })
     const [mainPage] = await browser.pages();
+    //const pages = await browser.newPage()
     //await mainPage.setUserAgent('Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1')
     try {
         console.log('script started')
@@ -298,6 +333,7 @@ async function startBrowserPath1(docName,text){
         }).catch(e => console.dir(e));
         console.log(ipchek)
         await gotoLademiLink(mainPage,ipchek,randomint,docName,text)
+        await gotoLademiLinkya(mainPage,ipchek,randomint,docName,text)
         await mainPage.close()
         await browser.close()
 
@@ -318,6 +354,7 @@ async function startBrowserPath2(docName,text){
         ]
     })
     const [mainPage] = await browser.pages();
+    //const pages = await browser.newPage()
     //await mainPage.setUserAgent('Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1')
     try {
         console.log('script started')
@@ -343,6 +380,7 @@ async function startBrowserPath2(docName,text){
             }).catch(e => console.dir(e));
             console.log(ipchek)
             await gotoLademiLink(mainPage,ipchek,'Undefined',docName,text)
+            await gotoLademiLinkya(mainPage,ipchek,'Undefined',docName,text)
             await mainPage.close()
             await browser.close()
         }
@@ -362,6 +400,7 @@ async function startBrowserPath3(docName,text){
         ]
     })
     const [mainPage] = await browser.pages();
+    //const pages = await browser.newPage()
     // await mainPage.setUserAgent('Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1')
     try {
         console.log('script started')
@@ -407,6 +446,7 @@ async function startBrowserPath3(docName,text){
         }).catch(e => console.dir(e));
         console.log(ipchek)
         await gotoLademiLink(mainPage,ipchek,'Undefined',docName,text)
+        await gotoLademiLinkya(mainPage,ipchek,'Undefined',docName,text)
         await mainPage.close()
         await browser.close()
         //await setData(ipchek,'Undefined',docName)
@@ -436,24 +476,29 @@ async function gotoLademiLink(page,ipchek,randomint,docName,text) {
         await page.waitForTimeout(60000*2)*/
         await page.goto('https://www.google.com/',{waitUntil:'domcontentloaded'})
         //#L2AGLb
-        const myLocalValue = text.key1;
+        const myValue = text.key1;
+        const array = myValue.split(';')
+        const arrlength = array.length
+
+        let randint = await randomInteger(1,arrlength)
+        const myLocalValue = array[randint-1]
+        console.log(array+'  --  '+arrlength+'  --  '+randint+'  --  '+myLocalValue)
         const domen = text.key2
         try {
             await page.waitForSelector('#L2AGLb')
             await page.click('#L2AGLb')
-            await page.waitForTimeout(5000)
+            await page.waitForTimeout(10000)
             await page.click('input[type="text"]')
             await page.keyboard.type(myLocalValue);
             //await page.$eval('input[type="text"]', (el, value) => el.value = value, myLocalValue);
             await page.keyboard.press('Enter');
             await page.waitForTimeout(10000)
-
             const linkHandlers = await page.$x(`//cite[contains(text(), 'https://${domen}')]`);
             if (linkHandlers.length > 0) {
                 await page.setUserAgent(useragent)
                 await linkHandlers[0].click();
                 console.log('click')
-                await page.waitForTimeout(60000)
+                await page.waitForTimeout(parseInt(text.key5)*60000)
                 await setData(ipchek,randomint,docName)
             } else {
                 throw new Error("Link not found");
@@ -463,17 +508,83 @@ async function gotoLademiLink(page,ipchek,randomint,docName,text) {
             await page.keyboard.press('Enter');
             await page.waitForTimeout(10000)
             const linkHandlers = await page.$x(`//cite[contains(text(), 'https://${domen}')]`);
+            console.log(linkHandlers.length)
             if (linkHandlers.length > 0) {
                 await page.setUserAgent(useragent)
                 await linkHandlers[0].click();
                 console.log('click')
-                await page.waitForTimeout(240000)
+                await page.waitForTimeout(parseInt(text.key5)*60000)
                 await setData(ipchek,randomint,docName)
             } else {
                 throw new Error("Link not found");
             }
-        }
 
+        }
+        //await page.waitForSelector(".LC20lb", {visible: true});
+        //document.querySelectorAll('cite')
+        /*const searchResults = await page.$$eval("cite", els =>
+            els.map(e => e.innerText)
+        );*/
+        /*for (let i=0;i<10;i++){
+            if (searchResults[i]==='https://www.lademi.by') {
+                console.log('good')
+            }
+            }else {
+                console.log('bad')
+            }
+        }*/
+        //console.log();
+    }catch (e){
+        console.log(e)
+        //page.screenshot('error')
+    }
+
+}
+async function gotoLademiLinkya(page,ipchek,randomint,docName,text) {
+    try {
+        let useragent= randomUseragent.getRandom();
+        /*await page.goto('https://www.lademi.by/')
+        await page.waitForTimeout(60000*2)
+        await page.goto('https://www.lademi.ru/')
+        await page.waitForTimeout(60000*2)*/
+        await page.goto('https://yandex.by/',{waitUntil:'domcontentloaded'})
+        //#L2AGLb
+        const myValue = text.key1;
+        const array = myValue.split(';')
+        const arrlength = array.length
+
+        let randint = await randomInteger(1,arrlength)
+        const myLocalValue = array[randint-1]
+        console.log(array+'  --  '+arrlength+'  --  '+randint+'  --  '+myLocalValue)
+        const domen = text.key2
+        try {
+            await page.waitForSelector('body > main > div.body__content > form > div.search3__inner')
+            await page.click('body > main > div.body__content > form > div.search3__inner')
+            await page.waitForTimeout(5000)
+            await page.click('input[id="text"]')
+            await page.keyboard.type(myLocalValue,{delay:98});
+            //await page.$eval('input[type="text"]', (el, value) => el.value = value, myLocalValue);
+            await page.keyboard.press('Enter');
+            //await page.waitForTimeout(180000)
+            await page.waitForTimeout(10000)
+            const linkHandlers = await page.$x(`//b[contains(text(), 'LADEMi.by')]`);
+            console.log(linkHandlers)
+            await page.waitForTimeout(10000)
+            if (linkHandlers.length > 0) {
+                await page.setUserAgent(useragent)
+                await linkHandlers[0].click();
+                console.log('click')
+                await page.waitForTimeout(3000)
+
+                await page.waitForTimeout(parseInt(text.key5)*60000)
+                await setData(ipchek,randomint,docName)
+            } else {
+                throw new Error("Link not found");
+            }
+        }catch (e) {
+            console.log(e)
+
+        }
         //await page.waitForSelector(".LC20lb", {visible: true});
         //document.querySelectorAll('cite')
         /*const searchResults = await page.$$eval("cite", els =>
